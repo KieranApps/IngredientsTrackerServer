@@ -1,0 +1,11 @@
+{
+  "name": "ingredienttrackerserver",
+  "version": "1.0.0",
+  "description": "Server for the Ingredient Tracker App",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Kieran Apps",
+  "license": "ISC"
+}
