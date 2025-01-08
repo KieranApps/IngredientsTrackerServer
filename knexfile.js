@@ -1,7 +1,7 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-module.exports = {
-
+export default {
     client: process.env.DATABASE_CLIENT,
     connection: {
       host: process.env.DATABASE_HOST,
