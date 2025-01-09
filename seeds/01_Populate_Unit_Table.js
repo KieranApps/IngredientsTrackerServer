@@ -18,6 +18,6 @@ export async function seed(knex) {
         {unit: 'tsp'},
         {unit: 'tbsp'},
         {unit: 'pinch'},
-        {unit: 'handfull'}
+        {unit: 'handful'}
     ]); 
 }
