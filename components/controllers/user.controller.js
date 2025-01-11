@@ -32,6 +32,8 @@ export async function createUser(req, res) {
     });
     const { name, email, password } = validate(req.body, schema);
 
+    // Validate email to ensure it IS an email
+
     // Check email doesnt exist
     const existingUser = await getUserByEmail(email);
     if (existingUser) {
