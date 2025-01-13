@@ -8,6 +8,8 @@ import { comparePasswords, hashPassword, validate } from '../utils/utils.js';
 import { InvalidParameters } from '../utils/exceptions.js';
 import { addUserToTable, getUserByEmail, getAllUserInfoByEmail } from '../services/user.service.js';
 
+const EMAIL_REGEX = new RegExp('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+[.][a-z]{2,}$');
+
 const validPassword = (password) => {
     if(password.length < 8 || password.length > 100){
         return false;
@@ -33,11 +35,13 @@ export async function createUser(req, res) {
     const { name, email, password } = validate(req.body, schema);
 
     // Validate email to ensure it IS an email
-
+    if (!EMAIL_REGEX.test(email)) {
+        throw new InvalidParameters('Not valid email')
+    }
     // Check email doesnt exist
     const existingUser = await getUserByEmail(email);
     if (existingUser) {
-        return res.json('Email in use');
+        throw new InvalidParameters('Email in use')
     }
 
     if (!validPassword(password))
@@ -60,8 +64,11 @@ export async function login(req, res) {
     const { email, password } = validate(req.body, schema);
 
     const userInfo = await getAllUserInfoByEmail(email);
+    if (!userInfo) {
+        return res.json({success: false, message: 'User not found'});
+    }
+    
     const samePass = await comparePasswords(password, userInfo.password);
-
     if (!samePass) {
         return res.json({success: false, message: 'Invalid login'});
     }
@@ -71,8 +78,8 @@ export async function login(req, res) {
     const refreshToken = jwt.sign({id: userInfo.id, email: email}, process.env.JWT_REFRESH_SECRET, {expiresIn: '30d'}); // Last one month, refresh if older than a day. If older than 30, log out on app
 
     return res.json({success: true, tokens: {
-        accessToken: accessToken,
-        refreshToken: refreshToken  
+            accessToken: accessToken,
+            refreshToken: refreshToken  
         }
     })
 }
