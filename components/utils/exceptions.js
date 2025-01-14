@@ -46,10 +46,18 @@ class InvalidParameters extends ApplicationError {
     }
 }
 
+class Unauthorized extends ApplicationError {
+    constructor(message, extraInfo) {
+        message = message || 'Unauthorized for request';
+        super(status('Unauthorized'), {message, extraInfo})
+    }
+}
+
 export {
     ApplicationError,
 
     NotFound,
     InvalidParameters,
     InternalServerError,
+    Unauthorized,
 }

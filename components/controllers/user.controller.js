@@ -53,7 +53,7 @@ export async function createUser(req, res) {
 
     const result = await addUserToTable(name, email, hashedPassword);
 
-    return res.json(result);
+    return res.json({success: true, result});
 };
 
 export async function login(req, res) {
@@ -74,12 +74,12 @@ export async function login(req, res) {
     }
 
     // Sort out JWT and auth
-    const accessToken = jwt.sign({id: userInfo.id, email: email}, process.env.JWT_SECRET, {expiresIn: '15m'}); // Last 15 mins
+    const accessToken = jwt.sign({id: userInfo.id, email: email}, process.env.JWT_SECRET, {expiresIn: '30m'}); // Last 15 mins
     const refreshToken = jwt.sign({id: userInfo.id, email: email}, process.env.JWT_REFRESH_SECRET, {expiresIn: '30d'}); // Last one month, refresh if older than a day. If older than 30, log out on app
 
     return res.json({success: true, tokens: {
             accessToken: accessToken,
             refreshToken: refreshToken  
         }
-    })
+    });
 }
