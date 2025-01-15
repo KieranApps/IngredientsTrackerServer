@@ -10,10 +10,10 @@ import { InvalidParameters, Unauthorized } from '../utils/exceptions.js';
 
 
 export async function refreshTokens(req, res) {
-    const { refreshtoken } = req.headers;
+    const { token } = req.headers;
     let verifiedToken;
     try {
-        verifiedToken = jwt.verify(refreshtoken, process.env.JWT_REFRESH_SECRET);
+        verifiedToken = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
     } catch (error) {
         // The token is invalid
         throw new Unauthorized('Invalid Tokens');

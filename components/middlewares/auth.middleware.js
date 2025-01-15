@@ -1,15 +1,22 @@
 
 // Token check
 export async function checkAccessToken(req, res, next) {
-    const { accesstoken } = req.headers;
+    const { token } = req.headers;
     let verifiedToken;
     try {
-        verifiedToken = jwt.verify(accesstoken, process.env.JWT_SECRET);
+        verifiedToken = jwt.verify(token, process.env.JWT_SECRET);
     } catch (error) {
         // The token is invalid
         throw new UnAuthorized('Invalid Tokens');
     }
-    console.log(verifiedToken)
 
+    const expiry = verifiedToken.exp;
+    const now = moment();
+    if (now.isAfter(expiry * 1000)) {
+        // Current date is AFTER expiry, so token is expired
+        throw new Unauthorized('Invalid Tokens');
+    }
+
+    // Is valid and in date, so move on to endpoint
     next();
 };
