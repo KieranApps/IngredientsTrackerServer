@@ -77,9 +77,29 @@ export async function login(req, res) {
     const accessToken = jwt.sign({id: userInfo.id, email: email}, process.env.JWT_SECRET, {expiresIn: '30m'}); // Last 15 mins
     const refreshToken = jwt.sign({id: userInfo.id, email: email}, process.env.JWT_REFRESH_SECRET, {expiresIn: '30d'}); // Last one month, refresh if older than a day. If older than 30, log out on app
 
-    return res.json({success: true, tokens: {
+    return res.json({
+        success: true, 
+        tokens: {
             accessToken: accessToken,
             refreshToken: refreshToken  
+        },
+        userInfo: {
+            id: userInfo.id,
+            email: userInfo.email,
+            name: userInfo.name
         }
     });
+}
+
+export async function getUserInfo(req, res) {
+    const schema = Joi.object({
+        email: Joi.string().required(),
+    });
+    const { email } = validate(req.query, schema);
+
+    const userInfo = await getUserByEmail(email);
+    if (!userInfo) {
+        return res.json({success: false, message: 'User not found'}); // Shouldnt happen, but just in case
+    }
+    return res.json(userInfo);
 }
