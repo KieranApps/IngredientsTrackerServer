@@ -1,12 +1,9 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import Joi from 'joi';
 import jwt from 'jsonwebtoken';
-import moment from 'moment';
 
-import { validate } from '../utils/utils.js';
-import { InvalidParameters, Unauthorized } from '../utils/exceptions.js';
+import { Unauthorized } from '../utils/exceptions.js';
 
 
 export async function refreshTokens(req, res) {
@@ -16,13 +13,6 @@ export async function refreshTokens(req, res) {
         verifiedToken = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
     } catch (error) {
         // The token is invalid
-        throw new Unauthorized('Invalid Tokens');
-    }
-
-    const expiry = verifiedToken.exp;
-    const now = moment();
-    if (now.isAfter(expiry * 1000)) {
-        // Current date is AFTER expiry, so token is expired
         throw new Unauthorized('Invalid Tokens');
     }
 
