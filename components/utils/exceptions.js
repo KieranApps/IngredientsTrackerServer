@@ -46,10 +46,24 @@ class InvalidParameters extends ApplicationError {
     }
 }
 
+class BadRequest extends ApplicationError {
+    constructor(message, info) {
+        message = message || 'Invalid Parameters';
+        super(status('Bad Request'), { message, extraInfo: info });
+    }
+}
+
 class Unauthorized extends ApplicationError {
     constructor(message, extraInfo) {
         message = message || 'Unauthorized for request';
         super(status('Unauthorized'), {message, extraInfo})
+    }
+}
+
+class Forbidden extends ApplicationError {
+    constructor(message, extraInfo) {
+        message = message || 'Unauthorized for request';
+        super(status('Forbidden'), {message, extraInfo})
     }
 }
 
@@ -58,6 +72,8 @@ export {
 
     NotFound,
     InvalidParameters,
+    BadRequest,
     InternalServerError,
     Unauthorized,
+    Forbidden,
 }

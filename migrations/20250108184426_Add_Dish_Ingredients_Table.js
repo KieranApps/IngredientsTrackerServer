@@ -8,6 +8,8 @@ export function up(knex) {
         t.integer('ingredient_id').unsigned().references('id').inTable('ingredients');
         t.float('amount').notNullable();
         t.integer('unit_id').unsigned().references('id').inTable('units');
+        t.boolean('deleted').defaultTo(false);
+        t.datetime('deleted_at');
     });
 }
 

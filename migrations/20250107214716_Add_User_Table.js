@@ -7,6 +7,8 @@ export function up(knex) {
         t.string('password').notNullable();
         t.string('reset_id').nullable();
         t.datetime('reset_expiry').nullable();
+        t.boolean('deleted').defaultTo(false);
+        t.datetime('deleted_at');
     });
 }
 

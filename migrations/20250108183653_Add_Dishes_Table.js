@@ -5,6 +5,8 @@ export function up(knex) {
         t.increments('id').primary();
         t.string('name', 255).notNullable();
         t.integer('user_id').unsigned().references('id').inTable('users');
+        t.boolean('deleted').defaultTo(false);
+        t.datetime('deleted_at');
     });
 }
 
