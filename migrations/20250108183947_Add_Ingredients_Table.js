@@ -4,10 +4,6 @@
 // Avoids users adding their own which could cause issues, or user specific ingredients which could end with
 // 1,000,000 entries just for onion...
 
-
-
-
-
 export function up(knex) {
     return knex.schema.createTable('ingredients', (t) => {
         t.increments('id').primary();
