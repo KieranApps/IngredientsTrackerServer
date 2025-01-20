@@ -6,6 +6,7 @@ export function up(knex) {
         t.integer('dish_id').unsigned().references('id').inTable('dishes');
         t.datetime('date').notNullable();
         t.boolean('completed').defaultTo(false);
+        t.index(['user_id'], 'idx_userid');
     });
 }
 

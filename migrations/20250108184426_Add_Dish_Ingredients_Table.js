@@ -10,6 +10,7 @@ export function up(knex) {
         t.integer('unit_id').unsigned().references('id').inTable('units');
         t.boolean('deleted').defaultTo(false);
         t.datetime('deleted_at');
+        t.index(['dish_id', 'ingredient_id'], 'idx_dishid_ingredientid');
     });
 }
 

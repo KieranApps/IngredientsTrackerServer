@@ -8,8 +8,10 @@ export function up(knex) {
     return knex.schema.createTable('ingredients', (t) => {
         t.increments('id').primary();
         t.string('name', 255).notNullable();
-        t.boolean('deleted').defaultTo(false);
-        t.datetime('deleted_at');
+        // index name only
+        t.index(['name'], 'idx_name', {
+            indexType: 'FULLTEXT',
+        });
     });
 }
 

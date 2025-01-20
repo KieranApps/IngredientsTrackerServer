@@ -7,6 +7,7 @@ export function up(knex) {
         t.integer('user_id').unsigned().references('id').inTable('users');
         t.boolean('deleted').defaultTo(false);
         t.datetime('deleted_at');
+        t.index(['user_id', 'name'], 'idx_userid_name');
     });
 }
 
