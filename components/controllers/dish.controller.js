@@ -1,6 +1,8 @@
 import Joi from 'joi';
 
-import { addDishToTable, getDishInfo, getAll, getDishInfoById, deleteDishInfo } from '../services/dish.service.js';
+import myknex from '../../knexConfig.js';
+
+import { addDishToTable, getDishInfo, getAll, getDishInfoById, deleteDishInfo, deleteDishIngredientLink } from '../services/dish.service.js';
 import { validate } from '../utils/utils.js';
 import { BadRequest, Forbidden, NotFound } from '../utils/exceptions.js';
 
@@ -40,6 +42,15 @@ export async function getDish(req, res) {
 
 }
 
+export async function editDish(req, res) {
+    const schema = Joi.object({
+        id: Joi.number().positive().required(),
+        user_id: Joi.number().positive().required(),
+        name: Joi.string().required()
+    });
+    const { id, user_id, name } = validate(req.body, schema);
+}
+
 export async function deleteDish(req, res) {
     const schema = Joi.object({
         dish_id: Joi.number().positive().required(),
@@ -57,10 +68,15 @@ export async function deleteDish(req, res) {
     }
 
     // If dish found, and you are user that owns it, perform delete
-    // Put inside transaction
-    // Mark dish as deleted
-    // Delete from schedule
-    // Mark dish_ingredient links as deleted as well
-    const dishDeleted = await deleteDishInfo(dish_id);
+    await myknex.transaction(async (transaction) => {
+        // Mark dish as deleted
+        const dishDeleted = await deleteDishInfo(dish_id, transaction);
+        // Mark dish_ingredient links as deleted
+        const linkDeleted = await deleteDishIngredientLink(dish_id, transaction);
+
+        // Delete from schedule
+        
+    });
     
+    return res.json({succes: true});
 }

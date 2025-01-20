@@ -15,9 +15,17 @@ export async function getDishInfoById(id) {
 }
 
 export async function getAll(user_id) {
-    return await myknex('dishes').select('*').where({user_id: user_id});
+    return await myknex('dishes').select('*').where({user_id: user_id}).where({deleted: false});
 }
 
-export async function deleteDishInfo(id) {
-    return await knex('dishes').where('id', id).update({deleted: true});
+export async function updateDish(updates) {
+    return await knex('dishes').where('id', id).update(updates);
+}
+
+export async function deleteDishInfo(id, transaction) {
+    return await knex('dishes').where('id', id).update({deleted: true}).transacting(transaction);
+}
+ // We do want this seperate, as it is needed on its own for removing ingredient from dish
+export async function deleteDishIngredientLink(dish_id, transaction) {
+    return await knex('dish_ingredients').where('dish_id', dish_id).update({deleted: true}).transacting(transaction);
 }
