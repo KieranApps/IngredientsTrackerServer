@@ -9,6 +9,7 @@ export function up(knex) {
         t.datetime('reset_expiry').nullable();
         t.boolean('deleted').defaultTo(false);
         t.datetime('deleted_at');
+        t.index(['email'], 'idx_email');
     });
 }
 
