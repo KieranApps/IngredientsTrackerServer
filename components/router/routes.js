@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import userRoute from './user.routes.js';
 import authRoute from './auth.routes.js';
 import dishRoute from './dish.routes.js';
+import ingredientRoute from './ingredients.routes.js';
 
 const router = express.Router({
     mergeParams: true
@@ -19,6 +20,7 @@ router.use(bodyParser.json());
 router.use('/api/user', userRoute);
 router.use('/api/auth', authRoute);
 router.use('/api/dish', dishRoute);
+router.use('/api/ingredients', ingredientRoute);
 
 
 export default router;
