@@ -11,8 +11,6 @@ export async function searchIngredients(req, res){
 
     const results = await searchIngredientsTable(term);
 
-    console.log(results);
-
     return res.json({success: true, results});
 }
 
