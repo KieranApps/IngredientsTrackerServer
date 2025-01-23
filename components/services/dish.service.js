@@ -46,7 +46,7 @@ export async function getAll(user_id) {
  * @returns 
  */
 export async function updateDish(updates) {
-    return await knex('dishes').where('id', id).update(updates);
+    return await myknex('dishes').where('id', id).update(updates);
 }
 
 /**
@@ -56,7 +56,7 @@ export async function updateDish(updates) {
  * @returns 
  */
 export async function deleteDishInfo(id, transaction) {
-    return await knex('dishes').where('id', id).update({deleted: true}).transacting(transaction);
+    return await myknex('dishes').where('id', id).update({deleted: true}).transacting(transaction);
 }
 
  // We do want this seperate, as it is needed on its own for removing ingredient from dish
@@ -67,5 +67,16 @@ export async function deleteDishInfo(id, transaction) {
   * @returns 
   */
 export async function deleteDishIngredientLink(dish_id, transaction) {
-    return await knex('dish_ingredients').where('dish_id', dish_id).update({deleted: true}).transacting(transaction);
+    return await myknex('dish_ingredients').where('dish_id', dish_id).update({deleted: true}).transacting(transaction);
+}
+
+/**
+ * 
+ * @param {number}} dish_id 
+ * @param {number}} ingredient_id 
+ * @param {number}} amount 
+ * @param {number}} unit_id 
+ */
+export async function addIngredientLink(dish_id, ingredient_id, amount, unit_id) {
+    return await myknex('dish_ingredients').insert({ dish_id, ingredient_id, amount, unit_id });
 }

@@ -2,7 +2,7 @@ import Joi from 'joi';
 
 import myknex from '../../knexConfig.js';
 
-import { addDishToTable, getDishInfo, getAll, getDishInfoById, deleteDishInfo, deleteDishIngredientLink } from '../services/dish.service.js';
+import { addDishToTable, getDishInfo, getAll, getDishInfoById, deleteDishInfo, deleteDishIngredientLink, addIngredientLink } from '../services/dish.service.js';
 import { validate } from '../utils/utils.js';
 import { BadRequest, Forbidden, NotFound } from '../utils/exceptions.js';
 
@@ -79,4 +79,19 @@ export async function deleteDish(req, res) {
     });
     
     return res.json({succes: true});
+}
+
+export async function addIngredient(req, res) {
+    const schema = Joi.object({
+        dish_id: Joi.number().positive().required(),
+        ingredient_id: Joi.number().positive().required(),
+        amount: Joi.number().positive().required(),
+        unit_id: Joi.number().positive().required(),
+    });
+    const { dish_id, ingredient_id, amount, unit_id } = validate(req.body, schema);
+    
+    const [result] = await addIngredientLink(dish_id, ingredient_id, amount, unit_id);
+
+    res.json({ success: true, result });
+
 }
