@@ -7,7 +7,7 @@ const router = express.Router({
     mergeParams: true
 });
 
-router.get('/:userId/:startDate/:endDate', checkAccessToken, asyncRequest(getSchedule));
+router.get('/:user_id/:startDate/:endDate', checkAccessToken, asyncRequest(getSchedule));
 
 router.post('/add', checkAccessToken, asyncRequest(addDishToSchedule));
 

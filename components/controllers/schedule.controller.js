@@ -8,13 +8,13 @@ import { getDishInfoById } from '../services/dish.service.js';
 
 export async function getSchedule(req, res) {
     const schema = Joi.object({
-        userId: Joi.number().positive().required(),
+        user_id: Joi.number().positive().required(),
         startDate: Joi.date().required(),
         endDate: Joi.date().required(),
     });
-    const { userId, startDate, endDate } = validate(req.params, schema);
+    const { user_id, startDate, endDate } = validate(req.params, schema);
 
-    const results = await getScheduleForUser(userId, startDate, endDate);
+    const results = await getScheduleForUser(user_id, startDate, endDate);
 
     return res.json({success: true, results });
 }
