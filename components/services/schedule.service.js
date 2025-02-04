@@ -17,6 +17,10 @@ export async function addNewDishToSchedule(user_id, dish_id, date) {
     return await myknex('schedules').insert({ user_id, dish_id, date });
 }
 
+export async function editDishScheduleDate(user_id, dish_id, date) {
+    return await myknex('schedules').update({ dish_id: dish_id }).where({ user_id : user_id }).where({ date : date });
+}
+
 /**
  * 
  * @param {number} dish_id 
