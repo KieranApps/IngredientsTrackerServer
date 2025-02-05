@@ -5,6 +5,7 @@ import myknex from '../../knexConfig.js';
 import { addDishToTable, getDishInfo, getAll, getDishInfoById, deleteDishInfo, deleteDishIngredientLink, addIngredientLink } from '../services/dish.service.js';
 import { validate } from '../utils/utils.js';
 import { BadRequest, Forbidden, NotFound } from '../utils/exceptions.js';
+import { addIngredientToStock, checkForIngredient } from '../services/stock.service.js';
 
 export async function addDish(req, res) {
     const schema = Joi.object({
@@ -83,13 +84,20 @@ export async function deleteDish(req, res) {
 
 export async function addIngredient(req, res) {
     const schema = Joi.object({
+        user_id: Joi.number().positive().required(),
         dish_id: Joi.number().positive().required(),
         ingredient_id: Joi.number().positive().required(),
         amount: Joi.number().positive().required(),
         unit_id: Joi.number().positive().required(),
     });
-    const { dish_id, ingredient_id, amount, unit_id } = validate(req.body, schema);
+    const { user_id, dish_id, ingredient_id, amount, unit_id } = validate(req.body, schema);
     
+    // Add the ingredient to the stock table if not already in
+    const ingredientInStock = await checkForIngredient(user_id, ingredient_id);
+    if (!ingredientInStock) {
+        // Add it to the stock list
+        await addIngredientToStock(user_id, ingredient_id, amount, unit_id);
+    }
     const [result] = await addIngredientLink(dish_id, ingredient_id, amount, unit_id);
 
     res.json({ success: true, result });

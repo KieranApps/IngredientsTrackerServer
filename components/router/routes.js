@@ -6,6 +6,7 @@ import authRoute from './auth.routes.js';
 import dishRoute from './dish.routes.js';
 import ingredientRoute from './ingredients.routes.js';
 import scheduleRoute from './schedule.routes.js'
+import stockRoute from './stock.routes.js';
 
 const router = express.Router({
     mergeParams: true
@@ -23,6 +24,7 @@ router.use('/api/auth', authRoute);
 router.use('/api/dish', dishRoute);
 router.use('/api/ingredients', ingredientRoute);
 router.use('/api/schedule', scheduleRoute);
+router.use('/api/stock', stockRoute);
 
 
 export default router;

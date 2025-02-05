@@ -25,5 +25,6 @@ export async function getAllIngredients(dish_id) {
             'dish_ingredients.unit_id',
             'ingredients.name as ingredient_name')
         .where({ dish_id })
+        .where({ deleted: false })
         .join('ingredients', 'ingredients.id', 'dish_ingredients.ingredient_id');
 }
