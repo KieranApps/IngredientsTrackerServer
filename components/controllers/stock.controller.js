@@ -2,8 +2,10 @@ import Joi from 'joi';
 
 import { validate } from '../utils/utils.js';
 import { BadRequest, Forbidden, NotFound } from '../utils/exceptions.js';
-import { addIngredientToStock, getUsersStock } from '../services/stock.service.js';
+import { addIngredientToStock, getStockWithIds, getUsersStock, saveUpdatedStockAmount } from '../services/stock.service.js';
 import myknex from '../../knexConfig.js';
+import { getAllIngredients, getAllUnitsFromTable } from '../services/ingredients.service.js';
+import { UNIT_CONVERSION_MAPPING } from '../utils/constants.js';
 
 export async function getStock(req, res) {
     const schema = Joi.object({
@@ -37,20 +39,44 @@ export async function subtractIngredientsFromStock(req, res) {
         dish_id: Joi.number().positive().required(),
     });
 
-    const { user_id, dish_id }= validate(req.body, schema);
+    const { user_id, dish_id } = validate(req.body, schema);
 
-    // Put in a transaction
-    const success = await myknex.transaction(async (transaction) => {
-        // Get all ingredients and amounts
-        
-        // Get all stock (can use just stock from dish since we have ingredient IDs)
+    let manualCheck = false;
 
-        // Combine units/merge into one as much as possible
+    const updateInfo = await myknex.transaction(async (transaction) => {
+        const ingredients = await getAllIngredients(dish_id, transaction);
+        const stock = await getStockWithIds(user_id, ingredients.map(x => x.ingredient_id), transaction);
 
-        // Subtract ingredients on dish from stock amounts with correct units
+        const updatedStockItems = [];
+        for (const item in ingredients) {
+            const stockItem = stock.find((el) => {
+                return el.ingredient_id === item.ingredient_id;
+            });
+            // Process the units (do conversions if needed)
+            if (item.unit_id != stockItem.unit_id) {
+                // Check if gram etc...
+                const stockItemUnit = UNIT_CONVERSION_MAPPING[stockItem.unit];
+                if (!stockItemUnit && !stockItemUnit[item.unit]) { // I.e. if unit cannot be mapped to stock, then ignore
+                    // Set flag for notifaction
+                    manualCheck = true;
+                    continue; // Skip if not the same unit (by id), or not able to do a conversion (e.g. -> g to ml)
+                }
 
-        // Save new stock amount
+                // Always convert to whatever is in the stock unit
+                item.amount = item.amount * stockItemUnit[item.unit];
+            }
+
+            const updatedStockItem = {...stockItem, amount: stockItem.amount - item.amount <= 0 ? 0 : stockItem.amount - item.amount};
+            updatedStockItems.push(updatedStockItem);
+        }
+
+        let rawSql = 'CASE';
+        for (const item of updatedStockItems) {
+            rawSql += ` WHEN id = ${item.id} THEN ${item.amount}`;
+        }
+        rawSql += ' ELSE amount END';
+        return await saveUpdatedStockAmount(updatedStockItems.map(x => x.ingredient_id), rawSql, transaction);
     });
 
-    return res.json({ success: true, success });
+    return res.json({ success: true, updateInfo, manualCheck });
 }

@@ -96,7 +96,7 @@ export async function addIngredient(req, res) {
     const ingredientInStock = await checkForIngredient(user_id, ingredient_id);
     if (!ingredientInStock) {
         // Add it to the stock list
-        await addIngredientToStock(user_id, ingredient_id, amount, unit_id);
+        await addIngredientToStock(user_id, ingredient_id, 0 /**Assume 0 stock, user can adjust or ignore to start */, unit_id);
     }
     const [result] = await addIngredientLink(dish_id, ingredient_id, amount, unit_id);
 

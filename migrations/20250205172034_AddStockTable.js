@@ -13,10 +13,3 @@ export function up(knex) {
 export function down(knex) {
     return knex.schema.dropTable('stock');
 }
-
-
-/**\
- * 
- * When adding new ingredient, if NEW add to stock table
- * No seed needed
- */
