@@ -56,7 +56,7 @@ export async function subtractIngredientsFromStock(req, res) {
             if (item.unit_id != stockItem.unit_id) {
                 // Check if gram etc...
                 const stockItemUnit = UNIT_CONVERSION_MAPPING[stockItem.unit];
-                if (!stockItemUnit && !stockItemUnit[item.unit]) { // I.e. if unit cannot be mapped to stock, then ignore
+                if (!stockItemUnit || (stockItemUnit && !stockItemUnit[item.unit])) { // I.e. if unit cannot be mapped to stock, then ignore
                     // Set flag for notifaction
                     manualCheck = true;
                     continue; // Skip if not the same unit (by id), or not able to do a conversion (e.g. -> g to ml)
