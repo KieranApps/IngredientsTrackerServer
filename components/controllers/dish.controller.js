@@ -98,6 +98,11 @@ export async function addIngredient(req, res) {
         // Add it to the stock list
         await addIngredientToStock(user_id, ingredient_id, 0 /**Assume 0 stock, user can adjust or ignore to start */, unit_id);
     }
+    /**
+     * Worth looking into: Check if the ingredient exists in stock, if it does, check the units match and only allow a save if the unit is the same (or convertable)
+     * This will force it all to work together well for adding/subtracting and working out the shopping list even if it is more restrictive
+     * It will overall make the automation better, giving the user less to do
+     */
     const [result] = await addIngredientLink(dish_id, ingredient_id, amount, unit_id);
 
     res.json({ success: true, result });

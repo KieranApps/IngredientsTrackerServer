@@ -2,7 +2,7 @@ import Joi from 'joi';
 
 import { validate } from '../utils/utils.js';
 import { BadRequest, Forbidden, NotFound } from '../utils/exceptions.js';
-import { addIngredientToStock, getStockWithIds, getUsersStock, saveUpdatedStockAmount } from '../services/stock.service.js';
+import { addIngredientToStock, checkForIngredient, getStockWithIds, getUsersStock, saveUpdatedStockAmount } from '../services/stock.service.js';
 import myknex from '../../knexConfig.js';
 import { getAllIngredients, getAllUnitsFromTable } from '../services/ingredients.service.js';
 import { UNIT_CONVERSION_MAPPING } from '../utils/constants.js';
@@ -26,7 +26,12 @@ export async function addToStock(req, res) {
         unit_id: Joi.number().positive().required(),
     });
     const { user_id, ingredient_id, amount, unit_id } = validate(req.body, schema);
+    // Can only have one of an ingredient in stock(i.e., two enties of pork steaks in pcs and kg is NOT allowed)
 
+    const ingredientInStock = await checkForIngredient(user_id, ingredient_id);
+    if (ingredientInStock) {
+        throw new BadRequest('Cannot have multiple instances of the same ingredient in stock list. Please edit either the amount or Unit');
+    }
     const [result] = await addIngredientToStock(user_id, ingredient_id, amount, unit_id);
 
     res.json({ success: true, result });
