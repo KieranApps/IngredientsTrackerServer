@@ -12,6 +12,6 @@ router.get('/:user_id', checkAccessToken, asyncRequest(getStock));
 
 router.post('/add', checkAccessToken, asyncRequest(addToStock));
 
-router.post('/subtract', checkAccessToken, asyncRequest(subtractIngredientsFromStock));
+router.post('/decrease', checkAccessToken, asyncRequest(subtractIngredientsFromStock));
 
 export default router

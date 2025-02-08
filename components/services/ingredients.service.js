@@ -17,17 +17,21 @@ export async function getAllUnitsFromTable() {
  * @param {number} dish_id 
  */
 export async function getAllIngredients(dish_id, transaction) {
-    return myknex('dish_ingredients')
+    let query = myknex('dish_ingredients')
         .select('dish_ingredients.id',
             'dish_ingredients.dish_id',
             'dish_ingredients.ingredient_id',
             'dish_ingredients.amount',
             'dish_ingredients.unit_id',
             'ingredients.name as ingredient_name',
-            'unit.unit')
+            'units.unit')
         .where({ dish_id })
         .where({ deleted: false })
         .join('ingredients', 'ingredients.id', 'dish_ingredients.ingredient_id')
-        .join('units', 'units.id', 'dish_ingredients.unit_id')
-        .transacting(transaction);
+        .join('units', 'units.id', 'dish_ingredients.unit_id');
+
+    if (transaction) {
+        query = query.transacting(transaction);
+    }
+    return await query;
 }

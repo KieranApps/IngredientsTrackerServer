@@ -48,7 +48,7 @@ export async function subtractIngredientsFromStock(req, res) {
         const stock = await getStockWithIds(user_id, ingredients.map(x => x.ingredient_id), transaction);
 
         const updatedStockItems = [];
-        for (const item in ingredients) {
+        for (const item of ingredients) {
             const stockItem = stock.find((el) => {
                 return el.ingredient_id === item.ingredient_id;
             });
@@ -65,8 +65,9 @@ export async function subtractIngredientsFromStock(req, res) {
                 // Always convert to whatever is in the stock unit
                 item.amount = item.amount * stockItemUnit[item.unit];
             }
-
-            const updatedStockItem = {...stockItem, amount: stockItem.amount - item.amount <= 0 ? 0 : stockItem.amount - item.amount};
+            
+            const newAmount = stockItem.amount - item.amount <= 0 ? 0 : stockItem.amount - item.amount;
+            const updatedStockItem = { ...stockItem, amount: newAmount.toFixed(3) };
             updatedStockItems.push(updatedStockItem);
         }
 

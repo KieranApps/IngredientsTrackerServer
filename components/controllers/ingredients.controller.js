@@ -2,6 +2,7 @@ import Joi from 'joi';
 
 import { getAllUnitsFromTable, searchIngredientsTable, getAllIngredients } from '../services/ingredients.service.js';
 import { validate } from '../utils/utils.js';
+import myknex from '../../knexConfig.js';
 
 export async function searchIngredients(req, res){
     const schema = Joi.object({

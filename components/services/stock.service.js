@@ -13,7 +13,7 @@ export async function addIngredientToStock(user_id, ingredient_id, amount, unit_
 }
 
 export async function getStockWithIds(user_id, ingredient_ids, transaction) {
-    return await myknex('stock').select('*', 'units.unit')
+    return await myknex('stock').select('stock.*', 'units.unit')
         .join('units', 'units.id', 'stock.unit_id')
         .where({ user_id: user_id })
         .where('ingredient_id', 'in', ingredient_ids)
@@ -21,5 +21,5 @@ export async function getStockWithIds(user_id, ingredient_ids, transaction) {
 }
 
 export async function saveUpdatedStockAmount(ids, data, transaction) {
-    return await myknex('stock').update({ amount: myknex.raw(data) }).whereIn('id', ids).transacting(transaction);
+    return await myknex('stock').update({ amount: myknex.raw(data) }).transacting(transaction);
 }
