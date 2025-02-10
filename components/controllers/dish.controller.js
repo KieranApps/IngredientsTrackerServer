@@ -101,7 +101,7 @@ export async function addIngredient(req, res) {
         await addIngredientToStock(user_id, ingredient_id, 0 /**Assume 0 stock, user can adjust or ignore to start */, unit_id);
     }
 
-    if (ingredientInStock.unit_id !== unit_id) { // In theory should never happen, as we auto fill and lock the unit select
+    if (ingredientInStock && ingredientInStock.unit_id !== unit_id) { // In theory should never happen, as we auto fill and lock the unit select
         const stockItemUnit = UNIT_CONVERSION_MAPPING[ingredientInStock.unit];
         const ingredientUnit = await getUnitFromTable(unit_id);
         if (!stockItemUnit || (stockItemUnit && !stockItemUnit[ingredientUnit.unit])) {

@@ -24,13 +24,17 @@ export async function addToStock(req, res) {
         ingredient_id: Joi.number().positive().required(),
         amount: Joi.number().positive().required(),
         unit_id: Joi.number().positive().required(),
+        useTotal: Joi.bool(),
     });
-    const { user_id, ingredient_id, amount, unit_id } = validate(req.body, schema);
+    const { user_id, ingredient_id, amount, unit_id, useTotal } = validate(req.body, schema);
     // Can only have one of an ingredient in stock(i.e., two enties of pork steaks in pcs and kg is NOT allowed)
 
     const ingredientInStock = await checkForIngredient(user_id, ingredient_id);
     if (ingredientInStock) {
         throw new BadRequest('Cannot have multiple instances of the same ingredient in stock list. Please edit either the amount or Unit');
+    }
+    if (useTotal) {
+        // Get the ingedient for all user dishes and add up amount (we can do this since its all forced. Just need to do the conversions if applicable)
     }
     const [result] = await addIngredientToStock(user_id, ingredient_id, amount, unit_id);
 
