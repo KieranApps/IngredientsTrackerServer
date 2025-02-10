@@ -93,5 +93,6 @@ export async function subtractIngredientsFromStock(req, res) {
 
 export async function editStock(req, res) {
     // And also then, if editing the unit on the stock, it can edit all the units in the ingredients
-    // This is dish_ingredient. Can use fancy SWL links to splice it all together with the user ID, ingredient ID 
+    // Leave it if its convertible. i.e., going from ml to L on the stock thing then all can be kept as ml, or L which ever is in the dish ingredients
+    // This is dish_ingredient. Can use fancy SWL links to splice it all together with the user ID, ingredient ID
 }
