@@ -7,7 +7,7 @@ const router = express.Router({
     mergeParams: true
 });
 
-router.get('/search/:term', checkAccessToken, asyncRequest(searchIngredients));
+router.get('/search/:user_id/:term', checkAccessToken, asyncRequest(searchIngredients));
 router.get('/units', checkAccessToken, asyncRequest(getAllUnits));
 router.get('/all/:dish_id', checkAccessToken, asyncRequest(getAllForDish));
 

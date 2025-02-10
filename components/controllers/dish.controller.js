@@ -6,6 +6,8 @@ import { addDishToTable, getDishInfo, getAll, getDishInfoById, deleteDishInfo, d
 import { validate } from '../utils/utils.js';
 import { BadRequest, Forbidden, NotFound } from '../utils/exceptions.js';
 import { addIngredientToStock, checkForIngredient } from '../services/stock.service.js';
+import { UNIT_CONVERSION_MAPPING } from '../utils/constants.js';
+import { getUnitFromTable } from '../services/ingredients.service.js';
 
 export async function addDish(req, res) {
     const schema = Joi.object({
@@ -98,10 +100,30 @@ export async function addIngredient(req, res) {
         // Add it to the stock list
         await addIngredientToStock(user_id, ingredient_id, 0 /**Assume 0 stock, user can adjust or ignore to start */, unit_id);
     }
+
+    if (ingredientInStock.unit_id !== unit_id) { // In theory should never happen, as we auto fill and lock the unit select
+        const stockItemUnit = UNIT_CONVERSION_MAPPING[ingredientInStock.unit];
+        const ingredientUnit = await getUnitFromTable(unit_id);
+        if (!stockItemUnit || (stockItemUnit && !stockItemUnit[ingredientUnit.unit])) {
+            throw new BadRequest('Unit of ingredient must match that of the stock');
+        }
+    }
     /**
      * Worth looking into: Check if the ingredient exists in stock, if it does, check the units match and only allow a save if the unit is the same (or convertable)
+     * ^ On add ingredient endpoint
      * This will force it all to work together well for adding/subtracting and working out the shopping list even if it is more restrictive
      * It will overall make the automation better, giving the user less to do
+     * 
+     * DO THIS ^^^
+     * And also then, if editing the unit on the stock, it can edit all the units in the ingredients
+     * User WONT be able to edit units in the ingredients, can edit amounts
+     * 
+     * Can still keep the auto add from first time ingredient to stock
+     * 
+     * Maybe a new table, user_ingredient_unit link. So when getting ingredients (searching). We can join this table using ingredient and user ID
+     * 
+     * Can maybe just user stock table, if not exists, allow any. If does exist, use that unit ID and auto populate the drop down and lock it
+     * to get the unit they use for this ingredient if a repeat, then auto populate and lock the unit select input
      */
     const [result] = await addIngredientLink(dish_id, ingredient_id, amount, unit_id);
 

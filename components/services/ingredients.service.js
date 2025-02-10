@@ -12,6 +12,10 @@ export async function getAllUnitsFromTable() {
     return await myknex('units').select('*');
 }
 
+export async function getUnitFromTable(id) {
+    return await myknex('units').select('*').where({id}).first();
+}
+
 /**
  * 
  * @param {number} dish_id 
