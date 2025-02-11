@@ -1,7 +1,11 @@
 import myknex from '../../knexConfig.js';
 
 export async function getUsersStock(user_id) {
-    return await myknex('stock').select('*').where({ user_id: user_id });
+    return await myknex('stock')
+        .select('stock.*', 'ingredients.name as ingredient_name', 'units.unit')
+        .where({ user_id: user_id })
+        .join('ingredients', 'ingredients.id', 'stock.ingredient_id')
+        .join('units', 'units.id', 'stock.unit_id');
 }
 
 export async function checkForIngredient(user_id, ingredient_id) {
