@@ -39,3 +39,17 @@ export async function getAllIngredients(dish_id, transaction) {
     }
     return await query;
 }
+
+/**
+ * 
+ * @param {Number} user_id 
+ * @param {Number} ingredient_id 
+ */
+export async function updateUnitForIngredient(user_id, ingredient_id, unit_id, transaction) {
+    return await myknex('dish_ingredients')
+        .update({ unit_id })
+        .where({ ingredient_id })
+        .where('dishes.user_id', '=', user_id)
+        .join('dishes', 'dishes.id', 'dish_ingredients.dish_id')
+        .transacting(transaction);
+}

@@ -2,9 +2,9 @@ import Joi from 'joi';
 
 import { validate } from '../utils/utils.js';
 import { BadRequest, Forbidden, NotFound } from '../utils/exceptions.js';
-import { addIngredientToStock, checkForIngredient, getStockWithIds, getUsersStock, saveUpdatedStockAmount } from '../services/stock.service.js';
+import { addIngredientToStock, checkIngredientInStock, getStockWithIds, getUsersStock, saveUpdatedStockAmount, updateStockInfo } from '../services/stock.service.js';
 import myknex from '../../knexConfig.js';
-import { getAllIngredients, getAllUnitsFromTable } from '../services/ingredients.service.js';
+import { getAllIngredients, getAllUnitsFromTable, updateUnitForIngredient } from '../services/ingredients.service.js';
 import { UNIT_CONVERSION_MAPPING } from '../utils/constants.js';
 
 export async function getStock(req, res) {
@@ -29,7 +29,7 @@ export async function addToStock(req, res) {
     const { user_id, ingredient_id, amount, unit_id, useTotal } = validate(req.body, schema);
     // Can only have one of an ingredient in stock(i.e., two enties of pork steaks in pcs and kg is NOT allowed)
 
-    const ingredientInStock = await checkForIngredient(user_id, ingredient_id);
+    const ingredientInStock = await checkIngredientInStock(user_id, ingredient_id);
     if (ingredientInStock) {
         throw new BadRequest('Cannot have multiple instances of the same ingredient in stock list. Please edit either the amount or Unit');
     }
@@ -95,7 +95,67 @@ export async function editStock(req, res) {
     // And also then, if editing the unit on the stock, it can edit all the units in the ingredients
     // Leave it if its convertible. i.e., going from ml to L on the stock thing then all can be kept as ml, or L which ever is in the dish ingredients
     // This is dish_ingredient. Can use fancy SWL links to splice it all together with the user ID, ingredient ID
+    const schema = Joi.object({
+        user_id: Joi.number().positive().required(),
+        ingredient_id: Joi.number().positive().required(),
+        amount: Joi.number().positive(),
+        unitInfo: Joi.object().keys({
+            unit_id: Joi.number().positive().required(),
+            unit: Joi.string().required()
+        }),
+    });
 
+    const { user_id, ingredient_id, amount, unitInfo } = validate(req.body, schema);
+
+    const result = await myknex.transaction(async (transaction) => {
+        const existingStock = await checkIngredientInStock(user_id, ingredient_id, transaction);
+        if (!existingStock) {
+            throw new BadRequest("Stock item does not exist");
+        }
+        if ( (unitInfo && unitInfo.unit_id === existingStock.unit_id)  || amount === existingStock.amount) {
+            return; // Values the same, so ignore
+        }
+        
+        const checkUnits = () => {
+            if (!unitInfo) {
+                return false; // We are saving the amount
+                // Cant check since we haae no unit info from end point
+            }
+            // Check for unit stuff
+            if ((!UNIT_CONVERSION_MAPPING[existingStock.unit] || !UNIT_CONVERSION_MAPPING[unitInfo.unit])) {
+                // Not convertible either before or after (or both but different unit), so change all ingredients to be the new
+                return true;
+            }
+
+            // Check if old/new convertible to eachother
+            if (UNIT_CONVERSION_MAPPING[existingStock.unit][unitInfo.unit]) { // Works both way, from kg -> g, or g -> kg
+                return false; // The conversion works (for example going from gram to kilogram on the stock) so we can ignore
+            }
+
+            // At this point should be for swapping to a new convertible type, but convertable from old -> new or new -> old
+            // I.e., going from g -> ml
+            // So change all ingredient units to match the stock
+            return true;
+        }
+
+        const changeIngredients = checkUnits();
+
+        if (changeIngredients) {
+            // Update all ingredients (user has been warned this will change all)
+            await updateUnitForIngredient(user_id, ingredient_id, unitInfo.unit_id, transaction);
+        }
+
+        // Save the updates
+        const updates = {};
+        if (amount) {
+            updates['amount'] = amount;
+        }
+        if (unitInfo && unitInfo.unit_id) {
+            updates['unit_id'] = unitInfo.unit_id;
+        }
+        return await updateStockInfo(user_id, ingredient_id, updates, transaction);
+    });
     // If editing the unit of the stock, (and is not a convertible) then put a little popup to the user to say this will change ALL ingredient units for all dishes
     // If acknowledge then call this end point
+    return res.json({ success: true, result });
 }

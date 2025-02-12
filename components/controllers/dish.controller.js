@@ -5,7 +5,7 @@ import myknex from '../../knexConfig.js';
 import { addDishToTable, getDishInfo, getAll, getDishInfoById, deleteDishInfo, deleteDishIngredientLink, addIngredientLink } from '../services/dish.service.js';
 import { validate } from '../utils/utils.js';
 import { BadRequest, Forbidden, NotFound } from '../utils/exceptions.js';
-import { addIngredientToStock, checkForIngredient } from '../services/stock.service.js';
+import { addIngredientToStock, checkIngredientInStock } from '../services/stock.service.js';
 import { UNIT_CONVERSION_MAPPING } from '../utils/constants.js';
 import { getUnitFromTable } from '../services/ingredients.service.js';
 
@@ -95,7 +95,7 @@ export async function addIngredient(req, res) {
     const { user_id, dish_id, ingredient_id, amount, unit_id } = validate(req.body, schema);
     
     // Add the ingredient to the stock table if not already in
-    const ingredientInStock = await checkForIngredient(user_id, ingredient_id);
+    const ingredientInStock = await checkIngredientInStock(user_id, ingredient_id);
     if (!ingredientInStock) {
         // Add it to the stock list
         await addIngredientToStock(user_id, ingredient_id, 0 /**Assume 0 stock, user can adjust or ignore to start */, unit_id);
