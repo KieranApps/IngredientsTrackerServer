@@ -8,8 +8,12 @@ export async function searchIngredientsTable(term) {
     return await myknex('ingredients').select('*').where('name', 'like', `%${term}%`);
 }
 
-export async function getAllUnitsFromTable() {
-    return await myknex('units').select('*');
+export async function getAllUnitsFromTable(transaction) {
+    let query = myknex('units').select('*');
+    if (transaction) {
+        query = query.transacting(transaction);
+    }
+    return await query;
 }
 
 export async function getUnitFromTable(id) {
@@ -38,6 +42,28 @@ export async function getAllIngredients(dish_id, transaction) {
         query = query.transacting(transaction);
     }
     return await query;
+}
+
+export async function getIngredientsForDishes(dish_ids, transation) {
+    return await myknex('dish_ingredients').select(
+        'dish_ingredients.ingredient_id',
+        myknex.raw('SUM(dish_ingredients.amount) as amount'),
+        'dish_ingredients.unit_id',
+        'ingredients.name',
+        'stock.amount as stockAmount',
+        'stock.unit_id as stockUnitId',
+        )
+        .join('ingredients', 'ingredients.id', 'dish_ingredients.ingredient_id')
+        .join('stock', 'stock.ingredient_id', 'dish_ingredients.ingredient_id')
+        .groupBy(
+            'dish_ingredients.ingredient_id',
+            'ingredients.name',
+            'dish_ingredients.unit_id',
+            'stockAmount',
+            'stockUnitId'
+        )
+        .where('dish_ingredients.dish_id', 'in', dish_ids)
+        .transacting(transation);
 }
 
 /**

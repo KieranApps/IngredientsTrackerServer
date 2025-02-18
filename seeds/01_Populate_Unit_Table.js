@@ -11,6 +11,7 @@ export async function seed(knex) {
 
     return knex('units').insert([
         {unit: 'N/A'}, // For user to use have custom
+        {unit: 'pack(s)'},
         {unit: 'pcs'},
         {unit: 'g'},
         {unit: 'kg'},

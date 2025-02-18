@@ -1,11 +1,14 @@
 import Joi from 'joi';
+import moment from 'moment';
+import myknex from '../../knexConfig.js';
 
 import { validate } from '../utils/utils.js';
 import { BadRequest, Forbidden, NotFound } from '../utils/exceptions.js';
 import { addIngredientToStock, checkIngredientInStock, getStockWithIds, getUsersStock, saveUpdatedStockAmount, updateStockInfo } from '../services/stock.service.js';
-import myknex from '../../knexConfig.js';
-import { getAllIngredients, getAllUnitsFromTable, updateUnitForIngredient } from '../services/ingredients.service.js';
+import { getAllIngredients, getAllUnitsFromTable, getIngredientsForDishes, updateUnitForIngredient } from '../services/ingredients.service.js';
 import { UNIT_CONVERSION_MAPPING } from '../utils/constants.js';
+import { getScheduleForUser } from '../services/schedule.service.js';
+import { addItemToShoppingList, editShoppingListEntry, getShoppingListForUser } from '../services/shoppinglist.service.js';
 
 export async function getStock(req, res) {
     const schema = Joi.object({
@@ -85,9 +88,49 @@ export async function subtractIngredientsFromStock(req, res) {
             rawSql += ` WHEN id = ${item.id} THEN ${item.amount}`;
         }
         rawSql += ' ELSE amount END';
-        return await saveUpdatedStockAmount(updatedStockItems.map(x => x.ingredient_id), rawSql, transaction);
+        return await saveUpdatedStockAmount(rawSql, transaction);
     });
+    await myknex.transaction(async (transaction) => {
+        // Check next week schedule
+        const nextMonday = moment().isoWeekday(8).format('YYYY-MM-DD');
+        const nextSunday = moment().isoWeekday(14).format('YYYY-MM-DD');
+        const upcomingDishes = await getScheduleForUser(user_id, nextMonday, nextSunday, transaction);
+        const dishIds = upcomingDishes.map(x => x.dish_id);
+        const units = await getAllUnitsFromTable(transaction);
+        const upcomingIngredients = await getIngredientsForDishes(dishIds, transaction);
+        // Process each ingredient. Convert amounts to stock unit if needed
+        const itemsToAddToShoppingList = [];
+        // Get users shopping list (to see if item just needs its amount updated, or added)
+        const shoppingList = await getShoppingListForUser(user_id, transaction);
 
+        for (const ing of upcomingIngredients) {
+            if (ing.unit_id !== ing.stockUnitId) {
+                const ingUnit = units.find(x => x.id === ing.unit_id);
+                const stockUnit = units.find(x => x.id === ing.stockUnitId);
+                // Do conversion ( we force it to be doable )
+                const stockItemUnit = UNIT_CONVERSION_MAPPING[stockUnit.unit];
+                ing.amount = ing.amount * stockItemUnit[ingUnit.unit];
+            }
+            const ingredientInList = shoppingList.find(x => x.ingredient_id === ing.ingredient_id);
+
+            if (ingredientInList && ing.amount > ing.stockAmount) {
+                await editShoppingListEntry(user_id, ing.ingredient_id, (ing.amount - ing.stockAmount).toFixed(3), transaction);
+            }
+            if (!ingredientInList && ing.amount > ing.stockAmount) {
+                // Add to shopping list
+                itemsToAddToShoppingList.push({
+                    user_id: user_id,
+                    item: ing.name,
+                    ingredient_id: ing.ingredient_id,
+                    amount: (ing.amount - ing.stockAmount).toFixed(3),
+                    unit_id: ing.stockUnitId
+                });
+            }
+        }
+        if (itemsToAddToShoppingList.length > 0) {
+            await addItemToShoppingList(itemsToAddToShoppingList, transaction);
+        }
+    });
     return res.json({ success: true, updateInfo, manualCheck });
 }
 
@@ -153,6 +196,17 @@ export async function editStock(req, res) {
         if (unitInfo && unitInfo.unit_id) {
             updates['unit_id'] = unitInfo.unit_id;
         }
+        // ALWAYS change the shopping list unit to match stock (if exists)
+        /**
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         */
         return await updateStockInfo(user_id, ingredient_id, updates, transaction);
     });
     // If editing the unit of the stock, (and is not a convertible) then put a little popup to the user to say this will change ALL ingredient units for all dishes

@@ -36,7 +36,7 @@ export async function getStockWithIds(user_id, ingredient_ids, transaction) {
     return await query;
 }
 
-export async function saveUpdatedStockAmount(ids, data, transaction) {
+export async function saveUpdatedStockAmount(data, transaction) {
     return await myknex('stock').update({ amount: myknex.raw(data) }).transacting(transaction);
 }
 
