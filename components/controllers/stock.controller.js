@@ -8,7 +8,7 @@ import { addIngredientToStock, checkIngredientInStock, getStockWithIds, getUsers
 import { getAllIngredients, getAllUnitsFromTable, getIngredientsForDishes, updateUnitForIngredient } from '../services/ingredients.service.js';
 import { UNIT_CONVERSION_MAPPING } from '../utils/constants.js';
 import { getScheduleForUser } from '../services/schedule.service.js';
-import { addItemToShoppingList, editShoppingListEntry, getShoppingListForUser } from '../services/shoppinglist.service.js';
+import { addItemToShoppingList, editShoppingListItems, getShoppingListForUser } from '../services/shoppinglist.service.js';
 
 export async function getStock(req, res) {
     const schema = Joi.object({
@@ -90,6 +90,7 @@ export async function subtractIngredientsFromStock(req, res) {
         rawSql += ' ELSE amount END';
         return await saveUpdatedStockAmount(rawSql, transaction);
     });
+
     await myknex.transaction(async (transaction) => {
         // Check next week schedule
         const nextMonday = moment().isoWeekday(8).format('YYYY-MM-DD');
@@ -103,6 +104,8 @@ export async function subtractIngredientsFromStock(req, res) {
         // Get users shopping list (to see if item just needs its amount updated, or added)
         const shoppingList = await getShoppingListForUser(user_id, transaction);
 
+        let rawUpdateSql = 'CASE';
+        let needUpdate = false;
         for (const ing of upcomingIngredients) {
             if (ing.unit_id !== ing.stockUnitId) {
                 const ingUnit = units.find(x => x.id === ing.unit_id);
@@ -114,7 +117,8 @@ export async function subtractIngredientsFromStock(req, res) {
             const ingredientInList = shoppingList.find(x => x.ingredient_id === ing.ingredient_id);
 
             if (ingredientInList && ing.amount > ing.stockAmount) {
-                await editShoppingListEntry(user_id, ing.ingredient_id, (ing.amount - ing.stockAmount).toFixed(3), transaction);
+                needUpdate = true;
+                rawUpdateSql += ` WHEN id = ${ingredientInList.id} THEN ${(ing.amount - ing.stockAmount).toFixed(3)}`;
             }
             if (!ingredientInList && ing.amount > ing.stockAmount) {
                 // Add to shopping list
@@ -126,6 +130,10 @@ export async function subtractIngredientsFromStock(req, res) {
                     unit_id: ing.stockUnitId
                 });
             }
+        }
+        if (needUpdate) {
+            rawUpdateSql += ' ELSE amount END';
+            await editShoppingListItems(rawUpdateSql, transaction);
         }
         if (itemsToAddToShoppingList.length > 0) {
             await addItemToShoppingList(itemsToAddToShoppingList, transaction);

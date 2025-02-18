@@ -16,10 +16,6 @@ export async function addItemToShoppingList(info, transaction) {
     return await query;
 }
 
-export async function editShoppingListEntry(user_id, ingredient_id, amount, transaction) {
-    let query = myknex('shopping_list').where({ user_id }).where({ ingredient_id }).update({ amount });
-    if (transaction) {
-        query = query.transacting(transaction);
-    }
-    return await query;
+export async function editShoppingListItems(rawSql, transaction) {
+    return await myknex('shopping_list').update({ amount: myknex.raw(rawSql) }).transacting(transaction);
 }
