@@ -2,9 +2,10 @@ import Joi from 'joi';
 import moment from 'moment';
 
 import { validate } from '../utils/utils.js';
-import { BadRequest, Forbidden, NotFound } from '../utils/exceptions.js';
+import { BadRequest } from '../utils/exceptions.js';
 import { addNewDishToSchedule, getScheduleForUser, editDishScheduleDate} from '../services/schedule.service.js';
 import { getDishInfoById } from '../services/dish.service.js';
+import { updateShoppingList } from '../utils/helpers.js';
 
 export async function getSchedule(req, res) {
     const schema = Joi.object({
@@ -41,6 +42,9 @@ export async function addDishToSchedule(req, res) {
     }
     dateGiven = dateGiven.format('YYYY-MM-DD HH:mm:ss');
     const [result] = await addNewDishToSchedule(user_id, dish_id, dateGiven);
+
+    await updateShoppingList();
+
     return res.json({success: true, result });
 }
 
