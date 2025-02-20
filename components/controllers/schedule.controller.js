@@ -43,7 +43,11 @@ export async function addDishToSchedule(req, res) {
     dateGiven = dateGiven.format('YYYY-MM-DD HH:mm:ss');
     const [result] = await addNewDishToSchedule(user_id, dish_id, dateGiven);
 
-    await updateShoppingList();
+    const nextMonday = moment().isoWeekday(8).format('YYYY-MM-DD');
+    const nextSunday = moment().isoWeekday(14).format('YYYY-MM-DD');
+    if (dateGiven.isBefore(nextMonday) || dateGiven.isAfter(nextSunday)) {
+        await updateShoppingList(); // If the scheduled meal is next week, update the list, else leave it
+    }
 
     return res.json({success: true, result });
 }

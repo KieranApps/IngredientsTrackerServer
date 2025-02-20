@@ -2,11 +2,19 @@ import Joi from 'joi';
 
 import { validate } from '../utils/utils.js';
 import { BadRequest, Forbidden, NotFound } from '../utils/exceptions.js';
-import { } from '../services/shoppinglist.service.js';
+import { getShoppingListForUser } from '../services/shoppinglist.service.js';
 
 
 export async function getShoppingList(req, res) {
+    const schema = Joi.object({
+        user_id: Joi.number().positive().required()
+    });
+    
+    const { user_id } = validate(req.params, schema);
 
+    const list = await getShoppingListForUser(user_id);
+
+    return res.json({ success: true, list });
 }
 
 export async function addToShoppingList(req, res) {

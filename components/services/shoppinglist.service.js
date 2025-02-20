@@ -1,7 +1,7 @@
 import myknex from '../../knexConfig.js';
 
 export async function getShoppingListForUser(user_id, transaction) {
-    let query = myknex('shopping_list').select('*').where({ user_id });
+    let query = myknex('shopping_list').select('shopping_list.*', 'units.unit').where({ user_id }).join('units', 'units.id', 'shopping_list.unit_id');
     if (transaction) {
         query = query.transacting(transaction);
     }

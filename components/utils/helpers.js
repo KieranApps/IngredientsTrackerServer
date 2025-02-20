@@ -1,8 +1,8 @@
 import moment from "moment";
 
-import myknex from "../../knexConfig";
-import { getAllUnitsFromTable, getIngredientsForDishes } from "../services/ingredients.service";
-import { addItemToShoppingList, editShoppingListItems, getShoppingListForUser } from "../services/shoppinglist.service";
+import myknex from "../../knexConfig.js";
+import { getAllUnitsFromTable, getIngredientsForDishes } from "../services/ingredients.service.js";
+import { addItemToShoppingList, editShoppingListItems, getShoppingListForUser } from "../services/shoppinglist.service.js";
 
 export async function updateShoppingList() {
     await myknex.transaction(async (transaction) => {
