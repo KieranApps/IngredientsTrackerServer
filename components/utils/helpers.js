@@ -54,3 +54,16 @@ export async function updateShoppingList() {
         }
     });
 }
+
+const compiledTemplates = {};
+export async function renderEmail(emailType, values, filePath){
+    if(!compiledTemplates[emailType]){
+        const rawTemplate = await fs.promises.readFile(`${appRoot}/server/utils/emails/${filePath}`);
+        compiledTemplates[emailType] = Handlebars.compile(rawTemplate.toString());
+    }
+
+    const thisTempalte = compiledTemplates[emailType];
+    const email = thisTempalte(values);
+
+    return email;
+}
